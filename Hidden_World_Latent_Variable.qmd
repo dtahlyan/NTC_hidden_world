@@ -1,0 +1,370 @@
+---
+title: "Hidden World of Latent Variables"
+subtitle: "A tutorial on latent factor and latent class modeing in R"
+author: "Divyakant Tahlyan"
+institute: "Northwestern University Transportation Center"
+date: "October 12, 2023"
+editor: visual
+title-slide-attributes:
+  data-background-image: title_image.jpg
+  data-background-size: contain
+  data-background-opacity: "0.5"
+format:
+  revealjs:
+    transition: slide
+    background-transition: fade
+    theme: dark
+    slide-number: true
+    smaller: true
+date-format: "MMM DD, YYYY"
+---
+
+------------------------------------------------------------------------
+
+### What is a latent variable?
+
+::: columns
+::: {.column width="80%"}
+::: incremental
+-   Origin: [*lateo*]{style="color:red;"} - "lie hidden"
+-   latent variables are unseeable (by definition), what you see is called the "manifest" / "indicator" variable
+-   latent variables could have another underlying dimension
+    -   GRE scores: Verbal section, Quantitative section, Writing section
+    -   life satisfaction: could be divided into health satisfaction, social relationship satisfaction etc.
+:::
+:::
+
+::: {.column width="20%"}
+
+
+```{mermaid}
+
+flowchart LR
+LV1((Latent Variable)) --> I1[Indicator 1]
+LV1 --> I2[Indicator 2]
+LV1 --> I3[Indicator 3]
+LV1 --> I4[Indicator 4]
+LV1 --> I5[Indicator 5]
+LV1 --> I6[Indicator 6]
+
+```
+
+:::
+:::
+
+------------------------------------------------------------------------
+
+### Latent variables are everywhere
+
+::: columns
+::: {.column width="50%"}
+
+::: {.fragment .fade-in}
+-   [Economics]{style="color:red;"}
+    -   Quality of Life
+    -   Credit 'Worthiness'
+
+:::
+
+::: {.fragment .fade-in}
+-   [Intelligence and Test Scores]{style="color:red;"}
+    -   GRE, SAT
+    -   IQ
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment .fade-in}
+-   [Social Sciences]{style="color:red;"}
+    -   Social Belonging
+    -   Social Capital
+:::
+
+:::{.fragment .fade-in}
+-   [Field of medicine]{style="color:red;"}
+    -   Disease diagnosis
+    -   Psychiatry
+:::
+:::
+:::
+
+------------------------------------------------------------------------
+
+### Why do we care about latent variable?
+
+::: {.fragment .fade-in}
+
+- [measuring the unseeable]{style="color:red;"}
+  - stress, experience, satisfaction, attitudes, privilege, perception, support, intelligence
+
+:::
+
+::: {.fragment .fade-up}
+
+- [dimensionality reduction]{style="color:red;"}
+  - models become unmanageable with increasing number of variables
+  - work with less variables and retain ~ same information
+
+:::
+
+::: {.fragment .fade-in}
+
+- [better behavioral interpretation in modeling]{style="color:red;"}
+  - observed variables are manifestation of attitudes, perceptions etc.
+  - including manifest variables as covariates may lead to endogeneity 
+
+:::
+
+::: {.fragment .fade-up}
+
+- [understanding relationship between different unseeables; or between unseeables and seeables]{style="color:red;"}
+  - social support and longevity
+  - accessibility and social upward mobility
+  - safety perception and transit use
+ 
+:::
+------------------------------------------------------------------------
+
+### Taxonomy of latent variable modeling
+
+Types of latent variable: Factors, classes
+
+Types of latent variable modeling paradigms: Exploratory, Confirmatory
+
+|                     |                         |                       |
+|:-------------------:|:-----------------------:|:---------------------:|
+|                     |                         | **Manifest Variable** |
+| **Latent Variable** |     **Continuous**      |    **Categorical**    |
+|   **Continuous**    |     Factor Analysis     | Item Response Theory  |
+|   **Categorical**   | Latent Profile Analysis | Latent Class Analysis |
+
+::: aside
+Galbraith, J.I., Moustaki, I., Bartholomew, D.J. and Steele, F., 2002. The analysis and interpretation of multivariate data for social scientists. CRC Press.
+:::
+
+------------------------------------------------------------------------
+
+### Typical model representation
+
+![](LV_setup.png){fig-align="center" width="75%"}
+
+
+
+
+------------------------------------------------------------------------
+
+
+### Goals for this tutorial
+
+::: {.fragment .fade-in}
+-   Exploratory Factor Analysis using [*stats*]{style="color:red;"} package in R
+    -   Big Five Personality Traits
+:::
+
+::: {.fragment .fade-in}
+-   Confirmatory Factor Analysis and SEM using [*lavaan*]{style="color:red;"} package in R
+    -   Big Five Personality Traits
+:::
+
+::: {.fragment .fade-in}
+-   Latent Class Analysis using [*poLCA*]{style="color:red;"} package in R
+    -   GPA and chronic cheating data
+:::
+
+::: {.fragment .fade-in}
+-   Understand codes for latent factor / class model used in three recent publications
+    -   Social capital dimensions and travel behavior
+    -   Perceived barriers to and benefits of telework and their relationship with telework satisfaction
+    -   Perceived impact of remote work on various work aspects
+:::
+
+------------------------------------------------------------------------
+
+### Exploratory Factor Analysis
+
+- factors are normally distributed random variables
+- Goal: explain covariance among observed variable as a linear function of a set of factors
+- Total variance: common (explained by factors) + unique (to an indicator)
+-   indicators are function of factors and measurement error i.e. factors cause observed indicators
+
+$$
+I_1 = \beta_{11}(F_1) + \beta_{12}(F_2) + \epsilon_1
+$$ $$
+I_2 = \beta_{21}(F_1) + \beta_{22}(F_2) + \epsilon_2
+$$ $$
+I_3 = \beta_{31}(F_1) + \beta_{32}(F_2) + \epsilon_3
+$$ 
+
+- number of factors in the data is not known a priori - decide using amount of variance explained by each factor
+- $\beta$ parameters also called factor loadings
+- eigenvalue: squared sum of $\beta$ in each column
+
+------------------------------------------------------------------------
+
+### Confirmatory Factor Analysis and SEM
+
+- assumes we have a factor in mind and know it's indicators
+- usually theory driven
+- Goal: test different hypotheses
+- things we can do: 
+  - $I_1 = \beta_1F_1 + \epsilon_1$: measurement model
+  - $F_1 = \beta_5F_2 + \beta_2X_1 + \epsilon_2$ : structural model
+  - $y_1 = \beta_3X_2 + \beta_4F_1 + \epsilon_3$: distal outcome model
+  - Popular example from transportation researchL ICLV
+  
+------------------------------------------------------------------------
+
+### Big Five Personality Traits Dataset
+
+::: columns
+::: {.column width="50%"}
+-   [agreeableness]{style="color:red;"} (friendly/compassionate vs. critical/rational)
+-   [conscientiousness ]{style="color:red;"} (efficient/organized vs. extravagant/careless)
+-   [extraversion]{style="color:red;"} (outgoing/energetic vs. solitary/reserved)
+-   [neuroticism]{style="color:red;"} (sensitive/nervous vs. resilient/confident)
+-   [openness to experience]{style="color:red;"} (inventive/curious vs. consistent/cautious)
+:::
+
+::: {.column width="50%"}
+![](big5.png){fig-align="center" width="75%"}
+:::
+:::
+
+------------------------------------------------------------------------
+
+### Big Five Personality Traits Dataset
+
+::: columns
+::: {.column width="50%"}
+::: {.fragment .fade-in}
+
+- [agreeableness]{style="color:red;"}
+  -   A1 Am indifferent to the feelings of others.
+  -   A2 Inquire about others' well-being.
+  -   A3 Know how to comfort others.
+  -   A4 Love children.
+  -   A5 Make people feel at ease.
+:::
+
+::: {.fragment .fade-up}
+
+- [conscientiousness]{style="color:red;"}
+  -   C1 Am exacting in my work.
+  -   C2 Continue until everything is perfect.
+  -   C3 Do things according to a plan.
+  -   C4 Do things in a half-way manner.
+  -   C5 Waste my time.
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment .fade-left}
+
+- [extraversion]{style="color:red;"}
+  -   E1 Don't talk a lot.
+  -   E2 Find it difficult to approach others.
+  -   E3 Know how to captivate people
+  -   E4 Make friends easily.
+  -   E5 Take charge.
+
+:::
+:::
+:::
+
+------------------------------------------------------------------------
+
+### Big Five Personality Traits Dataset
+
+::: columns
+::: {.column width="50%"}
+::: {.fragment .fade-up}
+
+- [neuroticism]{style="color:red;"}
+  -   N1 Get angry easily.
+  -   N2 Get irritated easily.
+  -   N3 Have frequent mood swings.
+  -   N4 Often feel blue.
+  -   N5 Panic easily.
+:::
+
+
+:::
+
+::: {.column width="50%"}
+
+::: {.fragment .fade-in}
+
+- [openness to experience]{style="color:red;"}
+  -   O1 Am full of ideas.
+  -   O2 Avoid difficult reading material.
+  -   O3 Carry the conversation to a higher level.
+  -   O4 Spend time reflecting on things.
+  -   O5 Will not probe deeply into a subject.
+:::
+:::
+:::
+
+
+------------------------------------------------------------------------
+
+### Latent Class Analysis
+
+- classes are categorical random variables-  multinomial distributed
+- Goal: determine classes of behavior in data
+- With 10 indicators and two possible responses (yes/no), there are $2^{10}=1024$ response possibilities - prohibitively large to utilize this information or even to understand what is going on in the data
+- assuming there are $j$ classes in the latent variable $c$ and $K$ indicators with yes/no response
+- model gives us two set of parameters: 
+  - $\gamma_{c_j}$: percentage of respondents in $c_j$
+  - $\rho_{u_k | c_j}$: probability of responding yes or no conditional on class membership
+- determine $j$ using bayesian information criteria (BIC)
+
+$$
+P(Y=y | c = c_j) =  \prod_{k=1}^{K}\prod_{u_k = 1}^{U} \rho_{u_k | c_j}^{I(y_{u_k} = r_{u_k})}
+$$
+
+------------------------------------------------------------------------
+
+### GPA and chronic cheating dataset
+
+Four indicators (1 - No; 2 = Yes)
+
+- have ever lied to avoid taking an exam (LIEEXAM)
+- have lied to avoid handing a term paper in on time (LIEPAPER)
+- purchased a term paper to hand in as their own or had obtained a copy of an exam prior to taking the exam (FRAUD)
+- copied answers during an exam from someone sitting near to them (COPYEXAM)
+
+Also available: [GPA]{style="color:red;"} of students on a 5-point scale: (1) 2.99 or less; (2) 3.00-3.25; (3) 3.26-3.50; (4) 3.51-3.75; (5) 3.76-4.00
+
+[319]{style="color:red;"} observations
+
+Example dataset in [*poLCA*]{style="color:red;"} package. Source: Dayton, C. Mitchell. 1998. Latent Class Scaling Analysis. Thousand Oaks, CA: SAGE Publications.
+
+------------------------------------------------------------------------
+
+#### Example 1: Understanding relationship between social capital dimensions and travel behavior
+
+![](social_capital.png){fig-align="center" width="60%"}
+
+::: aside
+Tahlyan, D., Stathopoulos, A. and Maness, M., 2022. Disentangling social capital... TRIP.
+:::
+
+------------------------------------------------------------------------
+
+#### Example 2: Understanding factors impacting telework satisfaction during the pandemic
+
+![](telework_satisfaction.png){fig-align="center" width="55%"}
+
+::: aside
+Tahlyan, Said, Mahmassani, Stathopoulos, Walker and Shaheen, 2022. For whom did telework not work during the Pandemic?... TR Part A
+:::
+
+------------------------------------------------------------------------
+
+#### Example 3: Remote work's impact on various work aspects
+
+![](LCA_plot.png){fig-align="center" width="60%"}
+
+::: aside
+Tahlyan, Said, Mahmassani, Stathopoulos, Walker and Shaheen, 2023. Trajectories of telework through the pandemic... TRB 2023.
+:::
